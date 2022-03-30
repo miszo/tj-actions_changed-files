@@ -86,8 +86,8 @@ jobs:
               packages/tsconfig/**
               packages/types/**
               packages/ui/**
-              \.github/actions/checkout-remote-actions/action.yml
-              \.github/workflows/quality-gate.yml
+              .github/actions/checkout-remote-actions/action.yml
+              .github/workflows/quality-gate.yml
           - app_scope: dashboard
             package_path: ./apps/dashboard
             files: |
@@ -99,8 +99,8 @@ jobs:
               packages/types/**
               packages/ui/**
               packages/webpack-loaders/**
-              \.github/actions/checkout-remote-actions/action.yml
-              \.github/workflows/quality-gate.yml
+              .github/actions/checkout-remote-actions/action.yml
+              .github/workflows/quality-gate.yml
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
