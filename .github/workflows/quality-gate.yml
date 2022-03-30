@@ -53,7 +53,7 @@ jobs:
 
       - name: Get specific changed files
         id: changed_files
-        uses: tj-actions/changed-files@v18.5
+        uses: tj-actions/changed-files@v18.6
         with:
           files: ${{ matrix.files }}
 
@@ -107,7 +107,7 @@ jobs:
 
       - name: Get specific changed files
         id: changed_files
-        uses: tj-actions/changed-files@v18.5
+        uses: tj-actions/changed-files@v18.6
         with:
           files: ${{ matrix.files }}
 
