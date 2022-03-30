@@ -1,0 +1,9 @@
+name: Checkout actions repository
+description: Checkout actions from private repository
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout actions repository
+      shell: bash
+      run: |
+        echo "Checkout actions repository"

@@ -1,0 +1,35 @@
+name: UI - quality gate
+
+on:
+  pull_request:
+    branches:
+      - '*'
+    paths:
+      - 'packages/jest-config/**'
+      - 'packages/linters-config/**'
+      - 'packages/tsconfig/**'
+      - 'packages/types/**'
+      - 'packages/ui/**'
+      - '.github/actions/checkout-remote-actions/action.yml'
+      - '.github/workflows/ui-quality-gate.yml'
+
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel build runs
+        uses: styfle/cancel-workflow-action@0.9.1
+
+      - name: Run ESLint
+        run: |
+          echo "Run ESLint"
+
+  stylelint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel build runs
+        uses: styfle/cancel-workflow-action@0.9.1
+
+      - name: Run Stylelint
+        run: |
+          echo "Run Stylelint"
