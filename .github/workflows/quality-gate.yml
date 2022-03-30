@@ -1,0 +1,169 @@
+name: Quality gate
+
+on: pull_request
+
+jobs:
+  cancel-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel workflow
+        uses: styfle/cancel-workflow-action@0.9.1
+  eslint:
+    runs-on: ubuntu-latest
+    needs: cancel-workflow
+    strategy:
+      matrix:
+        include:
+          - app_scope: ui
+            package_path: ./packages/ui
+            eslint_flags: '**/*.{ts,tsx}'
+            files: |
+              packages/ui/**
+              packages/jest-config/**
+              packages/linters-config/**
+              packages/tsconfig/**
+              packages/types/**
+              **/actions/checkout-remote-actions/action.yml
+              **/workflows/quality-gate.yml
+          - app_scope: homepage
+            package_path: ./apps/homepage
+            eslint_flags: '--quiet **/*.{ts,tsx}'
+            files: |
+              apps/homepage/**
+              packages/app-config/**
+              .github/actions/checkout-remote-actions/action.yml
+              .github/workflows/quality-gate.yml
+          - app_scope: dashboard
+            package_path: ./apps/dashboard
+            eslint_flags: '**/*.{ts,tsx}'
+            files: |
+              apps/dashboard/**
+              packages/app-config/**
+              packages/jest-config/**
+              packages/linters-config/**
+              packages/tsconfig/**
+              packages/types/**
+              packages/ui/**
+              packages/webpack-loaders/**
+              .github/actions/checkout-remote-actions/action.yml
+              .github/workflows/quality-gate.yml
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get specific changed files
+        id: changed_files
+        uses: tj-actions/changed-files@v18.6
+        with:
+          files: ${{ matrix.files }}
+
+      - name: Read changed_files tempfile
+        continue-on-error: true
+        run: |
+          find /tmp -type f -name "*.txt" -exec head -n5 {} \;
+
+      - name: No file was modified
+        if: steps.changed_files.outputs.any_modified == 'false'
+        run: |
+          echo "None of the files listed above was modified."
+
+      - name: Run ESLint
+        if: steps.changed_files.outputs.any_modified == 'true'
+        run: |
+          echo "Run ESLint for ${{ matrix.app_scope }}"
+
+  stylelint:
+    runs-on: ubuntu-latest
+    needs: cancel-workflow
+    strategy:
+      matrix:
+        include:
+          - app_scope: ui
+            package_path: ./packages/ui
+            files: |
+              packages/jest-config/**
+              packages/linters-config/**
+              packages/tsconfig/**
+              packages/types/**
+              packages/ui/**
+              .github/actions/checkout-remote-actions/action.yml
+              .github/workflows/quality-gate.yml
+          - app_scope: dashboard
+            package_path: ./apps/dashboard
+            files: |
+              apps/dashboard/**
+              packages/app-config/**
+              packages/jest-config/**
+              packages/linters-config/**
+              packages/tsconfig/**
+              packages/types/**
+              packages/ui/**
+              packages/webpack-loaders/**
+              .github/actions/checkout-remote-actions/action.yml
+              .github/workflows/quality-gate.yml
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get specific changed files
+        id: changed_files
+        uses: tj-actions/changed-files@v18.6
+        with:
+          files: ${{ matrix.files }}
+
+      - name: Read changed_files tempfile
+        continue-on-error: true
+        run: |
+          find /tmp -type f -name "*.txt" -exec head -n5 {} \;
+
+      - name: No file was modified
+        if: steps.changed_files.outputs.any_modified == 'false'
+        run: |
+          echo "None of the files listed above was modified."
+
+      - name: Run Stylelint
+        if: steps.changed_files.outputs.any_modified == 'true'
+        run: |
+          echo "Run Stylelint for ${{ matrix.app_scope }}"
+
+  quality-gate:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs:
+      - cancel-workflow
+      - eslint
+      - stylelint
+    steps:
+      - name: Check eslint matrix status
+        if: needs.eslint.result != 'success'
+        run: |
+          echo "Quality gate failed on eslint check!"
+
+      - name: Check stylelint matrix status
+        if: needs.stylelint.result != 'success'
+        run: |
+          echo "Quality gate failed on stylelint check!"
+
+
+      - name: Quality gate failed
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "Quality gate failed!"
+          exit 1
+
+      - name: Quality gate was cancelled
+        if: contains(needs.*.result, 'cancelled')
+        run: |
+          echo "Quality gate was cancelled."
+          exit 1
+
+      - name: Quality gate was skipped
+        if: contains(needs.*.result, 'skipped')
+        run: |
+          echo "Quality gate was skipped."
+          exit 1
+
+      - name: Quality gate passed
+        run: |
+          echo "Quality gate passed!"
+          exit 0
