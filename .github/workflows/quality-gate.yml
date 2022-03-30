@@ -86,8 +86,8 @@ jobs:
               packages/tsconfig/**
               packages/types/**
               packages/ui/**
-              .github/actions/checkout-remote-actions/action.yml
-              .github/workflows/quality-gate.yml
+              \.github/actions/checkout-remote-actions/action.yml
+              \.github/workflows/quality-gate.yml
           - app_scope: dashboard
             package_path: ./apps/dashboard
             files: |
@@ -99,8 +99,8 @@ jobs:
               packages/types/**
               packages/ui/**
               packages/webpack-loaders/**
-              .github/actions/checkout-remote-actions/action.yml
-              .github/workflows/quality-gate.yml
+              \.github/actions/checkout-remote-actions/action.yml
+              \.github/workflows/quality-gate.yml
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -125,3 +125,45 @@ jobs:
         if: steps.changed_files.outputs.any_modified == 'true'
         run: |
           echo "Run Stylelint for ${{ matrix.app_scope }}"
+
+  quality-gate:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs:
+      - cancel-workflow
+      - eslint
+      - stylelint
+    steps:
+      - name: Check eslint matrix status
+        if: needs.eslint.result != 'success'
+        run: |
+          echo "Quality gate failed on eslint check!"
+
+      - name: Check stylelint matrix status
+        if: needs.stylelint.result != 'success'
+        run: |
+          echo "Quality gate failed on stylelint check!"
+
+
+      - name: Quality gate failed
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "Quality gate failed!"
+          exit 1
+
+      - name: Quality gate was cancelled
+        if: contains(needs.*.result, 'cancelled')
+        run: |
+          echo "Quality gate was cancelled."
+          exit 1
+
+      - name: Quality gate was skipped
+        if: contains(needs.*.result, 'skipped')
+        run: |
+          echo "Quality gate was skipped."
+          exit 1
+
+      - name: Quality gate passed
+        run: |
+          echo "Quality gate passed!"
+          exit 0
